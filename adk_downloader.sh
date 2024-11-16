@@ -39,9 +39,10 @@ Windows 10 1607|10.1.14393.0
 "
 
 
-# Obtains a list of ADK downloads & creates a JSON-compatible output.
+# Obtains a list of ADK downloads & creates a TSV output.
 # ADK downloads are listed in below URL, unfortunately I haven't come across to a machine-readable 
-# format, so we parse the HTML here to capture the downloads links on the page with regex.
+# format, so we parse the HTML here to capture the links on the page & re-format link names to
+# match with other links.
 # https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install
 get_adk_downloads() {
     resolve_links="${1:-1}"
@@ -104,6 +105,7 @@ verify_work_folder() {
         echo "Work directory is not set or not a directory!" >&2
         if [ "$(is_tty)" = "0" ]
         then
+            echo "Picking a folder to use as a work directory..." >&2
             folder="$(zenity --file-selection --directory --title "Pick or create a new directory for working folder" || echo "")"
             if [ -z "${folder}" ] || [ ! -d "${folder}" ]
             then
@@ -661,7 +663,7 @@ else
             setup_packages="${FLAG_VALUE}"
             shift
             ;;
-            -*|--*)
+            --*)
             echo "Unknown option: ${1}" >&2
             echo "See --help for help" >&2
             exit 1
