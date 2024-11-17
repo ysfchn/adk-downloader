@@ -1,6 +1,6 @@
 # adk-downloader
 
-An Bash script to pull versions of [Windows Assessment and Deployment Kit (Windows ADK)](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install) from the same linked page, extract installer & download the packages, so they can be carried to a Windows machine later without depending on any initial Windows machine to download ADK.
+A Bash script to pull versions of [Windows Assessment and Deployment Kit (Windows ADK)](https://learn.microsoft.com/en-us/windows-hardware/get-started/adk-install) from the same linked page, extract installer & download the packages, so they can be carried to a Windows machine later without depending on any initial Windows machine to download ADK.
 
 ![](./image.png)
 

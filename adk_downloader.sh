@@ -364,8 +364,7 @@ extract_burn_bundle() {
     then
         confirm="$(
             zenity --title "adk-downloader" --question \
-            --text "These requested features will be downloaded:\n${feature_info}\n\nThis will require a total of ${size_human} of disk space.\n\n\
-    Files will be downloaded to:\n${extracted_folder}/ADK\n\nProceed?" \
+            --text "These requested features will be downloaded:\n${feature_info}\n\nThis will require a total of ${size_human} of disk space.\n\nProceed?" \
             || echo $?
         )"
         if [ -n "${confirm}" ]; then
@@ -548,18 +547,20 @@ pick_adk_version() {
         if [ -z "${extract}" ]
         then
             mkdir --parents --verbose "${WORK_FOLDER}/${folder_name}/ADK" >&2
-            extract_adk_installer "${WORK_FOLDER}/${folder_name}/${file_name}" "${WORK_FOLDER}/${folder_name}" "${WORK_FOLDER}/${folder_name}/ADK"
+            mkdir --parents --verbose "${WORK_FOLDER}/${folder_name}/_installer" >&2
+            extract_adk_installer "${WORK_FOLDER}/${folder_name}/${file_name}" "${WORK_FOLDER}/${folder_name}/_installer" "${WORK_FOLDER}/${folder_name}/ADK"
 
             # If file is an EXE setup, run aria2 for downloads.
             if [[ "${WORK_FOLDER}/${folder_name}/${file_name}" =~ "/adksetup.exe"* ]]
             then
-                extract_burn_bundle "${WORK_FOLDER}/${folder_name}" "${WORK_FOLDER}/${folder_name}/aria2c"
+                extract_burn_bundle "${WORK_FOLDER}/${folder_name}/_installer" "${WORK_FOLDER}/${folder_name}/aria2c"
                 start_aria2 "${aria2_file}" "${WORK_FOLDER}/${folder_name}/ADK"
             fi
         fi
     else
         mkdir --parents --verbose "${WORK_FOLDER}/${folder_name}/ADK" >&2
-        extract_adk_installer "${WORK_FOLDER}/${folder_name}/${file_name}" "${WORK_FOLDER}/${folder_name}" "${WORK_FOLDER}/${folder_name}/ADK"
+        mkdir --parents --verbose "${WORK_FOLDER}/${folder_name}/_installer" >&2
+        extract_adk_installer "${WORK_FOLDER}/${folder_name}/${file_name}" "${WORK_FOLDER}/${folder_name}/_installer" "${WORK_FOLDER}/${folder_name}/ADK"
     fi
 }
 
@@ -638,7 +639,7 @@ else
     FORCE_CLI="1"
     FLAG_VALUE="__flag__"
     download_version=
-    setup_version=
+    setup_folder=
     setup_packages=
     verify_work_folder
     while [[ $# -gt 0 ]]; do
@@ -656,7 +657,7 @@ else
             shift
             ;;
             --pick)
-            setup_version="${FLAG_VALUE}"
+            setup_folder="${FLAG_VALUE}"
             shift
             ;;
             --packages)
@@ -673,14 +674,15 @@ else
             then
                 download_version="${1}"
                 shift
-            elif [ "${setup_version}" = "${FLAG_VALUE}" ]
+            elif [ "${setup_folder}" = "${FLAG_VALUE}" ]
             then
-                if [ ! -d "${WORK_FOLDER}/${1}" ]
+                if [ ! -d "${WORK_FOLDER}/${1}/_installer" ]
                 then
-                    echo "Specified path must be a directory, ${WORK_FOLDER}/${1} is not a valid directory!" >&2
+                    echo "${WORK_FOLDER}/${1}/_installer is not a valid directory!" >&2
+                    echo "Is this version has downloaded already?"
                     exit 1
                 fi
-                setup_version="${WORK_FOLDER}/${1}"
+                setup_folder="${WORK_FOLDER}/${1}/_installer"
                 shift
             elif [ "${setup_packages}" = "${FLAG_VALUE}" ]
             then
@@ -699,7 +701,7 @@ else
         echo "--download option requires an parameter." >&2
         echo "See --help for help" >&2
         exit 1
-    elif [ "${setup_version}" = "${FLAG_VALUE}" ]
+    elif [ "${setup_folder}" = "${FLAG_VALUE}" ]
     then
         echo "--pick option requires an parameter." >&2
         echo "See --help for help" >&2
@@ -716,10 +718,10 @@ else
         pick_adk_version "" "${download_version}"
         exit 0 
     fi
-    if [ -n "${setup_version}" ]
+    if [ -n "${setup_folder}" ]
     then
         aria2_file="$(mktemp --suffix "_adk_aria2")"
-        extract_burn_bundle "${setup_version}" "${aria2_file}" "" "${setup_packages}"
+        extract_burn_bundle "${setup_folder}" "${aria2_file}" "" "${setup_packages}"
         cat "${aria2_file}"
         rm -rf "${aria2_file}"
         exit 0
